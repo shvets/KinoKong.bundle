@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
 from http_service import HttpService
 
 class KinoKongService(HttpService):
@@ -80,23 +79,13 @@ class KinoKongService(HttpService):
         urls_items = []
 
         for index, url in enumerate(urls):
-            groups = url.split('.')
-            text = groups[len(groups)-2]
-
-            result = re.search('(\d+)p\_(\d+)', text)
 
             urls_items.append({
                 "url": url,
                 "config": {
-                    "container": 'MP4',
-                    "audio_codec": 'AAC',
-                    "video_codec": 'H264',
-                    "width": result.group(1),
-                    "height": result.group(2)
-                    #"video_resolution": result.group(2),
                 }
             })
 
-        return [urls_items[0]]
+        return urls_items
 
 

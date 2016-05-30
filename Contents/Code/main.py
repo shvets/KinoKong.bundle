@@ -37,7 +37,7 @@ def HandleAllMovies(page=1):
 
 @route(PREFIX + '/movie')
 def HandleMovie(operation=None, container=False, **params):
-    oc = ObjectContainer(title2=unicode(L(params['name'])))
+    oc = ObjectContainer(title2=unicode(L(params['name'])), user_agent = 'Plex')
 
     # if 'season' in params:
     #     season = params['season']
@@ -173,8 +173,6 @@ def MediaObjectsForURL(url_items, player):
         url = item['url']
         config = item['config']
 
-        Log(url)
-
         play_callback = Callback(player, url=url, play_list=False)
 
         media_object = builder.build_media_object(play_callback, config)
@@ -186,8 +184,6 @@ def MediaObjectsForURL(url_items, player):
 @indirect
 @route(PREFIX + '/play_video')
 def PlayVideo(url, play_list=True):
-    Log(url)
-
     if not url:
         return plex_util.no_contents()
     else:
