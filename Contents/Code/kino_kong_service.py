@@ -21,6 +21,21 @@ class KinoKongService(HttpService):
     def get_all_movies(self, page=1):
         return self.get_movies("/films/", page=page)
 
+    def get_new_movies(self, page=1):
+        return self.get_movies("/films/novinki", page=page)
+
+    def get_series(self, page=1):
+        return self.get_movies("/serial/", page=page)
+
+    def get_animation(self, page=1):
+        return self.get_movies("/multfilm/", page=page)
+
+    def get_anime(self, page=1):
+        return self.get_movies("/anime/", page=page)
+
+    def get_tv_shows(self, page=1):
+        return self.get_movies("/dokumentalnyy/", page=page)
+
     def get_movies(self, path, page=1):
         list = []
 

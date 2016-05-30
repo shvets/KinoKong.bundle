@@ -58,6 +58,12 @@ def MainMenu():
     oc = ObjectContainer(title2=unicode(L('Title')), no_cache=True)
 
     oc.add(DirectoryObject(key=Callback(main.HandleAllMovies), title=unicode(L('Movies'))))
+    oc.add(DirectoryObject(key=Callback(main.HandleNewMovies), title=unicode(L('New Movies'))))
+    oc.add(DirectoryObject(key=Callback(main.HandleSeries), title=unicode(L('Series'))))
+    oc.add(DirectoryObject(key=Callback(main.HandleAnimation), title=unicode(L('Animation'))))
+    oc.add(DirectoryObject(key=Callback(main.HandleAnime), title=unicode(L('Anime'))))
+    oc.add(DirectoryObject(key=Callback(main.HandleTvShows), title=unicode(L('TV Shows'))))
+    oc.add(DirectoryObject(key=Callback(main.HandleTops), title=unicode(L('Top'))))
     oc.add(DirectoryObject(key=Callback(main.HandleHistory), title=unicode(L('History'))))
     oc.add(DirectoryObject(key=Callback(main.HandleQueue), title=unicode(L('Queue'))))
 

@@ -1,5 +1,5 @@
 {
-  "Title": "KinoKong",
+  "Title": "КиноКонг",
   "Queue": "Очередь",
   "Clear Queue": "Очистить Очередь",
   "History": "История",
@@ -7,6 +7,12 @@
   "Search on KinoKong.org": "Искать на KinoKong.org",
   "Service not avaliable": "Сервис Недоступен",
   "Movies": "Фильмы",
+  "New Movies": "Новые Фильмы",
+  "Series": "Сериалы",
+  "Animation": "Мультфильмы",
+  "Anime": "Аниме",
+  "TV Shows": "Передачи",
+  "Top": "Топ",
 
   "Add Bookmark": "Добавить в очередь",
   "Remove Bookmark": "Удалить из очереди"
