@@ -179,11 +179,7 @@ def MediaObjectsForURL(url_items, player):
 
         media_object = builder.build_media_object(play_callback, config)
 
-        Log(media_object)
-
         media_objects.append(media_object)
-
-    Log(media_objects)
 
     return media_objects
 
