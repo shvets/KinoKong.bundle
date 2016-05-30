@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 import plex_util
 import pagination
 import history
@@ -11,139 +10,33 @@ builder = FlowBuilder()
 
 @route(PREFIX + '/all_movies')
 def HandleAllMovies(page=1):
-    oc = ObjectContainer(title2=unicode(L('Movies')))
-
-    response = service.get_all_movies(page=page)
-
-    for item in response['movies']:
-        name = item['name']
-        thumb = item['thumb']
-
-        new_params = {
-            'type': "movie",
-            'id' :item['path'],
-            'name': item['name'],
-            'thumb': item['thumb']
-        }
-        oc.add(DirectoryObject(
-            key=Callback(HandleMovie, **new_params),
-            title=plex_util.sanitize(name),
-            thumb=plex_util.get_thumb(thumb)
-        ))
-
-    #pagination.append_controls(oc, response, callback=HandleMovies, path=path, title=title, page=page)
-
-    return oc
+    return HandleMovies(id='/films/', title="Movies", page=page)
 
 @route(PREFIX + '/new_movies')
 def HandleNewMovies(page=1):
-    oc = ObjectContainer(title2=unicode(L('New Movies')))
-
-    response = service.get_new_movies(page=page)
-
-    for item in response['movies']:
-        name = item['name']
-        thumb = item['thumb']
-
-        new_params = {
-            'type': "movie",
-            'id' :item['path'],
-            'name': item['name'],
-            'thumb': item['thumb']
-        }
-        oc.add(DirectoryObject(
-            key=Callback(HandleMovie, **new_params),
-            title=plex_util.sanitize(name),
-            thumb=plex_util.get_thumb(thumb)
-        ))
-
-    #pagination.append_controls(oc, response, callback=HandleMovies, path=path, title=title, page=page)
-
-    return oc
+    return HandleMovies(id='/films/novinki/', title="New Movies", page=page)
 
 @route(PREFIX + '/series')
 def HandleSeries(page=1):
-    oc = ObjectContainer(title2=unicode(L('Series')))
-
-    response = service.get_series(page=page)
-
-    for item in response['movies']:
-        name = item['name']
-        thumb = item['thumb']
-
-        new_params = {
-            'type': "movie",
-            'id' :item['path'],
-            'name': item['name'],
-            'thumb': item['thumb']
-        }
-        oc.add(DirectoryObject(
-            key=Callback(HandleMovie, **new_params),
-            title=plex_util.sanitize(name),
-            thumb=plex_util.get_thumb(thumb)
-        ))
-
-    #pagination.append_controls(oc, response, callback=HandleMovies, path=path, title=title, page=page)
-
-    return oc
+    return HandleMovies(id='/serial/', title="Series", page=page)
 
 @route(PREFIX + '/animation')
 def HandleAnimation(page=1):
-    oc = ObjectContainer(title2=unicode(L('Animation')))
-
-    response = service.get_animation(page=page)
-
-    for item in response['movies']:
-        name = item['name']
-        thumb = item['thumb']
-
-        new_params = {
-            'type': "movie",
-            'id' :item['path'],
-            'name': item['name'],
-            'thumb': item['thumb']
-        }
-        oc.add(DirectoryObject(
-            key=Callback(HandleMovie, **new_params),
-            title=plex_util.sanitize(name),
-            thumb=plex_util.get_thumb(thumb)
-        ))
-
-    #pagination.append_controls(oc, response, callback=HandleMovies, path=path, title=title, page=page)
-
-    return oc
+    return HandleMovies(id='/multfilm/', title="Animation", page=page)
 
 @route(PREFIX + '/anime')
 def HandleAnime(page=1):
-    oc = ObjectContainer(title2=unicode(L('Anime')))
-
-    response = service.get_anime(page=page)
-
-    for item in response['movies']:
-        name = item['name']
-        thumb = item['thumb']
-
-        new_params = {
-            'type': "movie",
-            'id' :item['path'],
-            'name': item['name'],
-            'thumb': item['thumb']
-        }
-        oc.add(DirectoryObject(
-            key=Callback(HandleMovie, **new_params),
-            title=plex_util.sanitize(name),
-            thumb=plex_util.get_thumb(thumb)
-        ))
-
-    #pagination.append_controls(oc, response, callback=HandleMovies, path=path, title=title, page=page)
-
-    return oc
+    return HandleMovies(id='/anime/', title="Anime", page=page)
 
 @route(PREFIX + '/tv_shows')
 def HandleTvShows(page=1):
-    oc = ObjectContainer(title2=unicode(L('TV Shows')))
+    return HandleMovies(id='/dokumentalnyy/', title="TV Shows", page=page)
 
-    response = service.get_tv_shows(page=page)
+@route(PREFIX + '/movies')
+def HandleMovies(title, id, page=1):
+    oc = ObjectContainer(title2=unicode(L(title)))
+
+    response = service.get_movies(path=id, page=page)
 
     for item in response['movies']:
         name = item['name']
@@ -161,7 +54,7 @@ def HandleTvShows(page=1):
             thumb=plex_util.get_thumb(thumb)
         ))
 
-    #pagination.append_controls(oc, response, callback=HandleMovies, path=path, title=title, page=page)
+    pagination.append_controls(oc, response, callback=HandleMovies, id=id, title=title, page=page)
 
     return oc
 
@@ -208,19 +101,58 @@ def HandleMovie(operation=None, container=False, **params):
 def HandleTops():
     oc = ObjectContainer(title2=unicode(L('Top')))
 
-    names = ['By Rating', 'By Views', 'By Comments', 'Selections']
+    genres = service.get_grouped_genres()['top']
 
-    for name in names:
+    for genre in genres:
         oc.add(DirectoryObject(
-            key=Callback(HandleTop, name=name),
-            title=plex_util.sanitize(unicode(L(name)))
+            key=Callback(HandleTop, id=genre['path'], name=genre['name']),
+            title=plex_util.sanitize(unicode(L(genre['name'])))
         ))
 
     return oc
 
 @route(PREFIX + '/top')
-def HandleTop(name):
+def HandleTop(id, name):
     oc = ObjectContainer(title2=unicode(L(name)))
+
+    return oc
+
+@route(PREFIX + '/all_genres')
+def HandleAllGenres():
+    oc = ObjectContainer(title2=unicode(L('Top')))
+
+    grouped_genres = service.get_grouped_genres()
+
+    movies_genres = grouped_genres['films']
+    series_genres = grouped_genres['serial']
+    anime_genres = grouped_genres['anime']
+
+    oc.add(DirectoryObject(
+        key=Callback(HandleGenres, name='Movies', genres=movies_genres),
+        title=plex_util.sanitize(unicode(L('Movies')))
+    ))
+
+    oc.add(DirectoryObject(
+        key=Callback(HandleGenres, name='Series', genres=series_genres),
+        title=plex_util.sanitize(unicode(L('Series')))
+    ))
+
+    oc.add(DirectoryObject(
+        key=Callback(HandleGenres, name='Anime', genres=anime_genres),
+        title=plex_util.sanitize(unicode(L('Anime')))
+    ))
+
+    return oc
+
+@route(PREFIX + '/genres', genres=list)
+def HandleGenres(name, genres):
+    oc = ObjectContainer(title2=unicode(L(name)))
+
+    for genre in genres:
+        oc.add(DirectoryObject(
+            key=Callback(HandleMovies, id=genre['path'], title=genre['name']),
+            title=plex_util.sanitize(unicode(L(genre['name'])))
+        ))
 
     return oc
 
@@ -228,27 +160,38 @@ def HandleTop(name):
 def HandleSearch(query=None, page=1):
     oc = ObjectContainer(title2=unicode(L('Search')))
 
-    # response = service.search(query=query, page=page)
-    #
-    # for movie in response['movies']:
-    #     name = movie['name']
-    #     thumb = movie['thumb']
-    #
-    #     new_params = {
-    #         'id': movie['path'],
-    #         'title': name,
-    #         'name': name,
-    #         'thumb': thumb
-    #     }
-    #     oc.add(DirectoryObject(
-    #         key=Callback(HandleMovieOrSerie, **new_params),
-    #         title=unicode(name),
-    #         thumb=plex_util.get_thumb(thumb)
-    #     ))
-    #
-    # pagination.append_controls(oc, response, callback=HandleSearch, query=query, page=page)
+    response = service.search(query=query, page=page)
+
+    for movie in response['movies']:
+        name = movie['name']
+        thumb = movie['thumb']
+
+        new_params = {
+            'id': movie['path'],
+            'title': name,
+            'name': name,
+            'thumb': thumb
+        }
+        oc.add(DirectoryObject(
+            key=Callback(HandleMovieOrSerie, **new_params),
+            title=unicode(name),
+            thumb=plex_util.get_thumb(thumb)
+        ))
+
+    pagination.append_controls(oc, response, callback=HandleSearch, query=query, page=page)
 
     return oc
+
+@route(PREFIX + '/movie_or_serie')
+def HandleMovieOrSerie(**params):
+    serie_info = service.get_serie_info(params['id'])
+
+    if serie_info:
+        params['type'] = 'serie'
+    else:
+        params['type'] = 'movie'
+
+    return HandleContainer(**params)
 
 @route(PREFIX + '/container')
 def HandleContainer(**params):

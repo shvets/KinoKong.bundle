@@ -8,8 +8,5 @@ class KinoKongPlexService(KinoKongService):
         self.queue = PlexStorage(storage_name)
 
         self.queue.register_simple_type('movie')
-        # self.queue.register_simple_type('track')
-        # self.queue.register_simple_type('serie')
+        self.queue.register_simple_type('serie')
         # self.queue.register_simple_type('selection')
-        # self.queue.register_simple_type('tracks')
-        # self.queue.register_simple_type('soundtrack')
