@@ -21,19 +21,26 @@ class MyHitServiceTest(unittest.TestCase):
 
         print(json.dumps(result, indent=4))
 
-    def test_get_movie_urls(self):
+    def test_get_urls(self):
         path = "/26545-lovushka-dlya-privideniya-2015-smotret-online.html"
 
-        result = self.service.get_movie_urls(path)
+        result = self.service.get_urls(path)
 
         print(json.dumps(result, indent=4))
 
-    def test_get_movie_urls_metadata(self):
+    def test_get_get_serie_playlist_url(self):
+        path = "/25213-rodoslovnaya-03-06-2016.html"
+
+        result = self.service.get_serie_playlist_url(path)
+
+        print(json.dumps(result, indent=4))
+
+    def test_get_urls_metadata(self):
         path = "/26545-lovushka-dlya-privideniya-2015-smotret-online.html"
 
-        urls = self.service.get_movie_urls(path)
+        urls = self.service.get_urls(path)
 
-        result = self.service.get_movie_urls_metadata(urls)
+        result = self.service.get_urls_metadata(urls)
 
         print(json.dumps(result, indent=4))
 
@@ -64,6 +71,13 @@ class MyHitServiceTest(unittest.TestCase):
         self.assertEqual(pagination['has_next'], True)
         self.assertEqual(pagination['has_previous'], True)
         self.assertEqual(pagination['page'], 2)
+
+    def test_get_serie_info(self):
+        series = self.service.get_all_series()['movies']
+
+        result = self.service.get_serie_info(series[0]['path'])
+
+        print(json.dumps(result, indent=4))
 
 if __name__ == '__main__':
     unittest.main()

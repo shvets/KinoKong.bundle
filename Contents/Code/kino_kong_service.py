@@ -27,7 +27,7 @@ class KinoKongService(HttpService):
     def get_new_movies(self, page=1):
         return self.get_movies("/films/novinki", page=page)
 
-    def get_series(self, page=1):
+    def get_all_series(self, page=1):
         return self.get_movies("/serial/", page=page)
 
     def get_animation(self, page=1):
@@ -67,7 +67,10 @@ class KinoKongService(HttpService):
 
         return {"movies": data, "pagination": pagination["pagination"]}
 
-    def get_movie_urls(self, path):
+    def get_series(self, path, page=1):
+        return self.get_movies(path=path, page=page)
+
+    def get_urls(self, path):
         urls = None
 
         document = self.fetch_document(self.URL + path)
@@ -87,12 +90,34 @@ class KinoKongService(HttpService):
 
         return urls
 
+    def get_serie_playlist_url(self, path):
+        url = None
+
+        document = self.fetch_document(self.URL + path)
+
+        items = document.xpath('//script')
+
+        for item in items:
+            text = item.text_content()
+
+            if text:
+                index1 = text.find('pl:')
+
+                if index1 >= 0:
+                    index2 = text[index1:].find('",')
+
+                    if index2 >= 0:
+                        url = text[index1+4:index1+index2]
+                        break
+
+        return url
+
     def get_movie(self, url):
         headers = {}
 
         return self.http_request(url, headers=headers).read()
 
-    def get_movie_urls_metadata(self, urls):
+    def get_urls_metadata(self, urls):
         urls_items = []
 
         for index, url in enumerate(urls):
@@ -237,4 +262,17 @@ class KinoKongService(HttpService):
         return response
 
     def get_serie_info(self, path):
-        return None
+        playlist_url = self.get_serie_playlist_url(path)
+
+        request = self.http_request(playlist_url)
+
+        request.read(3)
+        serie_info = request.read()
+
+        return self.to_json(serie_info)['playlist']
+
+    def get_episode_url(self, url, season, episode):
+        if season:
+            return '%s?season=%d&episode=%d' % (url, int(season), int(episode))
+
+        return url
