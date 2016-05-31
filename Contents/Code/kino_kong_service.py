@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import urllib
+import re
 
 from http_service import HttpService
 
@@ -95,12 +96,32 @@ class KinoKongService(HttpService):
         urls_items = []
 
         for index, url in enumerate(urls):
-
-            urls_items.append({
+            url_item = {
                 "url": url,
                 "config": {
+                    "container": 'MP4',
+                    "audio_codec": 'AAC',
+                    "video_codec": 'H264',
                 }
-            })
+            }
+
+            groups = url.split('.')
+            text = groups[len(groups)-2]
+
+            result = re.search('(\d+)p_(\d+)', text)
+
+            if result and len(result.groups()) == 2:
+                url_item['config']['width'] = result.group(1)
+                url_item['config']['video_resolution'] = result.group(2)
+                url_item['config']['height'] = result.group(2)
+            else:
+                result = re.search('_(\d+)', text)
+
+                if result and len(result.groups()) == 1:
+                    url_item['config']['width'] = result.group(1)
+                    #url_item['config']['video_resolution'] = result.group(1)
+
+            urls_items.append(url_item)
 
         return urls_items
 
@@ -146,14 +167,11 @@ class KinoKongService(HttpService):
             'do': 'search',
             'subaction': 'search',
             'search_start': page,
-            'full_search': 0,
+            'full_search': 1,
             'story': urllib.quote(query.decode('utf8').encode('cp1251'))
         }
 
-        if page == 1:
-            search_data['full_search'] = 1
-        else:
-            search_data['full_search'] = 0
+        if page > 1:
             search_data['result_from'] = page * per_page + 1
 
         path = "/index.php?do=search"
@@ -177,7 +195,12 @@ class KinoKongService(HttpService):
 
             href = href_link.get('href')
             href = href[len(self.URL):]
-            thumb = self.URL + thumb_link.get('src')
+
+            thumb = thumb_link.get('src')
+
+            if thumb.find(self.URL) == -1:
+                thumb = self.URL + thumb
+
             name = title_node.text_content()
 
             data.append({'path': href, 'thumb': thumb, 'name': name})
@@ -212,3 +235,6 @@ class KinoKongService(HttpService):
         }
 
         return response
+
+    def get_serie_info(self, path):
+        return None

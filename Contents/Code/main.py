@@ -97,6 +97,116 @@ def HandleMovie(operation=None, container=False, **params):
 
     return oc
 
+@route(PREFIX + '/series')
+def HandleSeries(path, title, page=1):
+    oc = ObjectContainer(title2=unicode(L(title)))
+
+    # response = service.get_series(path=path, page=page)
+    #
+    # for item in response['movies']:
+    #     new_params = {
+    #         'type': 'serie',
+    #         'id': item['path'],
+    #         'name': item['name'],
+    #         'thumb': item['thumb']
+    #     }
+    #
+    #     oc.add(DirectoryObject(
+    #         key=Callback(HandleSerie, **new_params),
+    #         title=plex_util.sanitize(item['name']),
+    #         thumb=plex_util.get_thumb(item['thumb'])
+    #     ))
+    #
+    # pagination.append_controls(oc, response, callback=HandleSeries, path=path, title=title, page=page)
+
+    return oc
+
+@route(PREFIX + '/serie')
+def HandleSerie(operation=None, **params):
+    oc = ObjectContainer(title2=unicode(params['name']))
+
+    # media_info = MediaInfo(**params)
+    #
+    # service.queue.handle_bookmark_operation(operation, media_info)
+    #
+    # serie_info = service.get_serie_info(params['id'])
+    #
+    # for index, item in enumerate(serie_info):
+    #     season = index+1
+    #     season_name = item['pltitle']
+    #     episodes = item['playlist']
+    #     rating_key = service.get_episode_url(params['id'], season, 0)
+    #
+    #     new_params = {
+    #         'type': 'season',
+    #         'id': params['id'],
+    #         'serieName': params['name'],
+    #         'name': season_name,
+    #         'thumb': params['thumb'],
+    #         'season': season,
+    #         'episodes': json.dumps(episodes)
+    #     }
+    #
+    #     oc.add(SeasonObject(
+    #         key=Callback(HandleSeason, **new_params),
+    #         rating_key=rating_key,
+    #         title=plex_util.sanitize(season_name),
+    #         index=int(season),
+    #         thumb=plex_util.get_thumb(params['thumb'])
+    #     ))
+    #
+    # service.queue.append_bookmark_controls(oc, HandleSerie, media_info)
+
+    return oc
+
+@route(PREFIX + '/season', container=bool)
+def HandleSeason(operation=None, container=False, **params):
+    oc = ObjectContainer(title2=unicode(params['name']))
+
+    # media_info = MediaInfo(**params)
+    #
+    # service.queue.handle_bookmark_operation(operation, media_info)
+    #
+    # if not params['episodes']:
+    #     serie_info = service.get_serie_info(params['id'])
+    #     list = serie_info[int(params['season'])-1]['playlist']
+    # else:
+    #     list = json.loads(params['episodes'])
+    #
+    # for index, episode in enumerate(list):
+    #     episode_name = episode['comment']
+    #     thumb = service.URL + episode['poster']
+    #     url = episode['file']
+    #
+    #     new_params = {
+    #         'type': 'episode',
+    #         'id': url,
+    #         'name': episode_name,
+    #         'serieName': params['serieName'],
+    #         'thumb': thumb,
+    #         'season': params['season'],
+    #         'episode': episode,
+    #         'episodeNumber': index+1
+    #     }
+    #
+    #     key = Callback(HandleEpisode, container=container, **new_params)
+    #
+    #     oc.add(DirectoryObject(
+    #         key=key,
+    #         title=unicode(episode_name),
+    #         thumb=plex_util.get_thumb(thumb)
+    #     ))
+    #
+    # if str(container) == 'False':
+    #     history.push_to_history(Data, media_info)
+    #     service.queue.append_bookmark_controls(oc, HandleSeason, media_info)
+
+    return oc
+
+@route(PREFIX + '/episode')
+def HandleEpisode(operation=None, container=False, **params):
+    return HandleMovie(operation=operation, container=container, **params)
+
 @route(PREFIX + '/tops')
 def HandleTops():
     oc = ObjectContainer(title2=unicode(L('Top')))
@@ -199,12 +309,12 @@ def HandleContainer(**params):
 
     if type == 'movie':
         return HandleMovie(**params)
-    # elif type == 'episode':
-    #     return HandleEpisode(**params)
-    # elif type == 'season':
-    #     return HandleSeason(**params)
-    # elif type == 'serie':
-    #     return HandleSerie(**params)
+    elif type == 'episode':
+        return HandleEpisode(**params)
+    elif type == 'season':
+        return HandleSeason(**params)
+    elif type == 'serie':
+        return HandleSerie(**params)
 
 @route(PREFIX + '/queue')
 def HandleQueue():
@@ -244,16 +354,8 @@ def MetadataObjectForURL(media_info, url_items, player):
 
     metadata_object.key = Callback(HandleMovie, container=True, **media_info)
 
-    # metadata_object.rating_key = 'rating_key'
     metadata_object.rating_key = unicode(media_info['name'])
-    # metadata_object.rating = data['rating']
     metadata_object.thumb = media_info['thumb']
-    # metadata_object.url = urls['m3u8'][0]
-    # metadata_object.art = data['thumb']
-    # metadata_object.tags = data['tags']
-    # metadata_object.duration = data['duration'] * 1000
-    # metadata_object.summary = data['summary']
-    # metadata_object.directors = data['directors']
 
     metadata_object.items = MediaObjectsForURL(url_items, player=player)
 
@@ -277,6 +379,7 @@ def MediaObjectsForURL(url_items, player):
 @indirect
 @route(PREFIX + '/play_video')
 def PlayVideo(url, play_list=True):
+    #Log(url)
     if not url:
         return plex_util.no_contents()
     else:
