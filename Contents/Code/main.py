@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import urllib
 import plex_util
 import pagination
 import history
@@ -63,40 +64,22 @@ def HandleMovies(title, id, page=1):
 def HandleMovie(operation=None, container=False, **params):
     oc = ObjectContainer(title2=unicode(L(params['name'])), user_agent = 'Plex')
 
-    if 'season' in params:
-        season = params['season']
-    else:
-        season = None
-
-    if 'episode' in params:
-        episode = params['episode']
-    else:
-        episode = None
-
-    if season and int(season) > 0 and episode:
-        #urls = service.get_urls(url=params['id'])
-        urls = [params['id']]
-    else:
-        urls = service.get_urls(path=params['id'])
+    urls = service.get_urls(path=params['id'])
 
     if len(urls) == 0:
         return plex_util.no_contents()
     else:
-#        urls = service.get_movie_urls(params['id'])
-
-        Log(urls)
-
         url_items = service.get_urls_metadata(urls)
 
         media_info = MediaInfo(**params)
 
         service.queue.handle_bookmark_operation(operation, media_info)
 
-        oc.add(MetadataObjectForURL(media_info=media_info, url_items=url_items, player=PlayVideo))
+        oc.add(MetadataObjectForURL(media_info=media_info, url_items=url_items, handler=HandleMovie, player=PlayVideo))
 
         if str(container) == 'False':
             history.push_to_history(Data, media_info)
-            #service.queue.append_bookmark_controls(oc, HandleMovie, media_info)
+            service.queue.append_bookmark_controls(oc, HandleMovie, media_info)
 
     return oc
 
@@ -178,15 +161,17 @@ def HandleSeason(operation=None, container=False, **params):
 
     for index, episode in enumerate(list):
         episode_name = episode['comment'].replace('<br>', ' ')
-        #thumb = service.URL + episode['poster']
+        thumb = params['thumb']
         url = episode['file']
+
+        Log(url)
 
         new_params = {
             'type': 'episode',
-            'id': url,
+            'id': json.dumps(url),
             'name': episode_name,
             'serieName': params['serieName'],
-            'thumb': 'thumb',
+            'thumb': thumb,
             'season': params['season'],
             'episode': episode,
             'episodeNumber': index+1
@@ -196,8 +181,8 @@ def HandleSeason(operation=None, container=False, **params):
 
         oc.add(DirectoryObject(
             key=key,
-            title=unicode(episode_name)
-            #thumb=plex_util.get_thumb(thumb)
+            title=unicode(episode_name),
+            thumb=plex_util.get_thumb(thumb)
         ))
 
     if str(container) == 'False':
@@ -208,7 +193,29 @@ def HandleSeason(operation=None, container=False, **params):
 
 @route(PREFIX + '/episode')
 def HandleEpisode(operation=None, container=False, **params):
-    return HandleMovie(operation=operation, container=container, **params)
+    oc = ObjectContainer(title2=unicode(L(params['name'])), user_agent='Plex')
+
+    Log(params['id'])
+    urls = json.loads(urllib.unquote_plus(params['id']))
+
+    Log(urls)
+
+    if len(urls) == 0:
+        return plex_util.no_contents()
+    else:
+        url_items = service.get_urls_metadata(urls)
+
+        media_info = MediaInfo(**params)
+
+        service.queue.handle_bookmark_operation(operation, media_info)
+
+        oc.add(MetadataObjectForURL(media_info=media_info, url_items=url_items, handler=HandleEpisode, player=PlayVideo))
+
+        if str(container) == 'False':
+            history.push_to_history(Data, media_info)
+            service.queue.append_bookmark_controls(oc, HandleEpisode, media_info)
+
+    return oc
 
 @route(PREFIX + '/tops')
 def HandleTops():
@@ -352,10 +359,10 @@ def HandleHistory():
 
     return oc
 
-def MetadataObjectForURL(media_info, url_items, player):
+def MetadataObjectForURL(media_info, url_items, handler, player):
     metadata_object = builder.build_metadata_object(media_type=media_info['type'], title=media_info['name'])
 
-    metadata_object.key = Callback(HandleMovie, container=True, **media_info)
+    metadata_object.key = Callback(handler, container=True, **media_info)
 
     metadata_object.rating_key = unicode(media_info['name'])
     metadata_object.thumb = media_info['thumb']

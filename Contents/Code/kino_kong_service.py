@@ -137,14 +137,14 @@ class KinoKongService(HttpService):
 
             if result and len(result.groups()) == 2:
                 url_item['config']['width'] = result.group(1)
-                url_item['config']['video_resolution'] = result.group(2)
+                url_item['config']['video_resolution'] = result.group(1)
                 url_item['config']['height'] = result.group(2)
             else:
                 result = re.search('_(\d+)', text)
 
                 if result and len(result.groups()) == 1:
                     url_item['config']['width'] = result.group(1)
-                    #url_item['config']['video_resolution'] = result.group(1)
+                    url_item['config']['video_resolution'] = result.group(1)
 
             urls_items.append(url_item)
 
@@ -264,12 +264,28 @@ class KinoKongService(HttpService):
     def get_serie_info(self, path):
         playlist_url = self.get_serie_playlist_url(path)
 
-        request = self.http_request(playlist_url)
+        content = self.fetch_content(playlist_url)
 
-        request.read(3)
-        serie_info = request.read()
+        index = content.find('{"playlist":')
 
-        return self.to_json(serie_info)['playlist']
+        serie_info = self.to_json(content[index:])['playlist']
+
+        if serie_info and len(serie_info) > 0 and 'playlist' not in serie_info[0]:
+            serie_info = [{
+                "comment": "Сезон 1",
+                "playlist": serie_info
+            }]
+
+        for item in serie_info:
+            for item2 in item['playlist']:
+                files = item2['file'].split(',')
+                item2['file'] = []
+
+                for file in files:
+                    if file:
+                        item2['file'].append(file)
+
+        return serie_info
 
     def get_episode_url(self, url, season, episode):
         if season:

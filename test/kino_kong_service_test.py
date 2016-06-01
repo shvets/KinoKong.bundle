@@ -75,7 +75,10 @@ class MyHitServiceTest(unittest.TestCase):
     def test_get_serie_info(self):
         series = self.service.get_all_series()['movies']
 
-        result = self.service.get_serie_info(series[0]['path'])
+        #path = series[0]['path']
+        path = "/28206-v-obezd-2015-07-06-2016.html"
+
+        result = self.service.get_serie_info(path)
 
         print(json.dumps(result, indent=4))
 
