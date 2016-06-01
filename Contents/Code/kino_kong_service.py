@@ -264,28 +264,29 @@ class KinoKongService(HttpService):
     def get_serie_info(self, path):
         playlist_url = self.get_serie_playlist_url(path)
 
-        content = self.fetch_content(playlist_url)
+        if playlist_url:
+            content = self.fetch_content(playlist_url)
 
-        index = content.find('{"playlist":')
+            index = content.find('{"playlist":')
 
-        serie_info = self.to_json(content[index:])['playlist']
+            serie_info = self.to_json(content[index:])['playlist']
 
-        if serie_info and len(serie_info) > 0 and 'playlist' not in serie_info[0]:
-            serie_info = [{
-                "comment": "Сезон 1",
-                "playlist": serie_info
-            }]
+            if serie_info and len(serie_info) > 0 and 'playlist' not in serie_info[0]:
+                serie_info = [{
+                    "comment": "Сезон 1",
+                    "playlist": serie_info
+                }]
 
-        for item in serie_info:
-            for item2 in item['playlist']:
-                files = item2['file'].split(',')
-                item2['file'] = []
+            for item in serie_info:
+                for item2 in item['playlist']:
+                    files = item2['file'].split(',')
+                    item2['file'] = []
 
-                for file in files:
-                    if file:
-                        item2['file'].append(file)
+                    for file in files:
+                        if file:
+                            item2['file'].append(file)
 
-        return serie_info
+            return serie_info
 
     def get_episode_url(self, url, season, episode):
         if season:

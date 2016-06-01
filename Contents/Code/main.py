@@ -45,13 +45,12 @@ def HandleMovies(title, id, page=1):
         thumb = item['thumb']
 
         new_params = {
-            'type': "movie",
             'id': item['path'],
             'name': item['name'],
             'thumb': item['thumb']
         }
         oc.add(DirectoryObject(
-            key=Callback(HandleMovie, **new_params),
+            key=Callback(HandleMovieOrSerie, **new_params),
             title=plex_util.sanitize(name),
             thumb=plex_util.get_thumb(thumb)
         ))
@@ -164,8 +163,6 @@ def HandleSeason(operation=None, container=False, **params):
         thumb = params['thumb']
         url = episode['file']
 
-        Log(url)
-
         new_params = {
             'type': 'episode',
             'id': json.dumps(url),
@@ -195,10 +192,7 @@ def HandleSeason(operation=None, container=False, **params):
 def HandleEpisode(operation=None, container=False, **params):
     oc = ObjectContainer(title2=unicode(L(params['name'])), user_agent='Plex')
 
-    Log(params['id'])
     urls = json.loads(urllib.unquote_plus(params['id']))
-
-    Log(urls)
 
     if len(urls) == 0:
         return plex_util.no_contents()
