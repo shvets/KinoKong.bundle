@@ -218,16 +218,64 @@ def HandleTops():
     genres = service.get_grouped_genres()['top']
 
     for genre in genres:
+        path = genre['path']
+        name = genre['name']
+
+        if path == '/podborka.html':
+            oc.add(DirectoryObject(
+                key=Callback(HandleTags, name=name),
+                title=plex_util.sanitize(unicode(L(name)))
+            ))
+        else:
+            oc.add(DirectoryObject(
+                key=Callback(HandleCriteria, id=path, name=name),
+                title=plex_util.sanitize(unicode(L(name)))
+            ))
+
+    return oc
+
+@route(PREFIX + '/tags')
+def HandleTags(name):
+    oc = ObjectContainer(title2=unicode(L(name)))
+
+    response = service.get_tags()
+
+    for item in response:
+        name = item['name']
+        thumb = item['thumb']
+
+        new_params = {
+            'id': item['path'],
+            'title': item['name']
+        }
         oc.add(DirectoryObject(
-            key=Callback(HandleTop, id=genre['path'], name=genre['name']),
-            title=plex_util.sanitize(unicode(L(genre['name'])))
+            key=Callback(HandleMovies, **new_params),
+            title=plex_util.sanitize(name),
+            thumb=plex_util.get_thumb(thumb)
         ))
 
     return oc
 
-@route(PREFIX + '/top')
-def HandleTop(id, name):
+@route(PREFIX + '/criteria', page=int, per_page=int)
+def HandleCriteria(id, name, page=1, per_page=25):
     oc = ObjectContainer(title2=unicode(L(name)))
+
+    response = service.get_movies_by_criteria_paginated(path=id, page=page, per_page=per_page)
+
+    for item in response['movies']:
+        name = item['name'] + " - " + item['rating']
+
+        new_params = {
+            'id': item['path'],
+            'name': item['name'],
+            'thumb': 'thumb'
+        }
+        oc.add(DirectoryObject(
+            key=Callback(HandleMovieOrSerie, **new_params),
+            title=name
+        ))
+
+    pagination.append_controls(oc, response, callback=HandleCriteria, id=id, name=name, page=page, per_page=per_page)
 
     return oc
 

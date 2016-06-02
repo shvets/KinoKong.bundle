@@ -72,6 +72,28 @@ class MyHitServiceTest(unittest.TestCase):
         self.assertEqual(pagination['has_previous'], True)
         self.assertEqual(pagination['page'], 2)
 
+    def test_pagination_in_movies_by_rating(self):
+        result = self.service.get_movies_by_rating(page=1)
+
+        # print(json.dumps(result, indent=4))
+
+        pagination = result['pagination']
+
+        self.assertEqual(pagination['has_next'], True)
+        self.assertEqual(pagination['has_previous'], False)
+        self.assertEqual(pagination['page'], 1)
+
+        result = self.service.get_movies_by_rating(page=2)
+
+        #print(json.dumps(result, indent=4))
+
+        pagination = result['pagination']
+
+        self.assertEqual(pagination['has_next'], True)
+        self.assertEqual(pagination['has_previous'], True)
+        self.assertEqual(pagination['page'], 2)
+
+
     def test_get_serie_info(self):
         series = self.service.get_all_series()['movies']
 
@@ -79,6 +101,16 @@ class MyHitServiceTest(unittest.TestCase):
         path = "/28206-v-obezd-2015-07-06-2016.html"
 
         result = self.service.get_serie_info(path)
+
+        print(json.dumps(result, indent=4))
+
+    def test_get_movies_by_rating(self):
+        result = self.service.get_movies_by_rating()
+
+        print(json.dumps(result, indent=4))
+
+    def test_get_tags(self):
+        result = self.service.get_tags()
 
         print(json.dumps(result, indent=4))
 

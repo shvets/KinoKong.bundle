@@ -67,6 +67,76 @@ class KinoKongService(HttpService):
 
         return {"movies": data, "pagination": pagination["pagination"]}
 
+    def get_movies_by_rating(self, page=1):
+        return self.get_movies_by_criteria_paginated( "/?do=top&mode=rating", page=page)
+
+    def get_movies_by_views(self, page=1):
+        return self.get_movies_by_criteria_paginated( "/?do=top&mode=views", page=page)
+
+    def get_movies_by_comments(self, page=1):
+        return self.get_movies_by_criteria_paginated( "/?do=top&mode=comments", page=page)
+
+    def get_movies_by_criteria(self, path):
+        data = []
+
+        document = self.fetch_document(self.URL + path)
+
+        items = document.xpath('//div[@id="dle-content"]/div/div/table/tr')
+
+        for item in items:
+            link = item.find('td/a')
+
+            if link is not None:
+                href = link.get('href')
+                href = href[len(self.URL):]
+                name = link.text_content()
+
+                tds = item.xpath('td')
+                rating = tds[len(tds)-1].text_content()
+
+                if href:
+                    data.append({'path': href, 'name': name, 'rating': rating})
+
+        return data
+
+    def get_movies_by_criteria_paginated(self, path, page=1, per_page=25):
+        data = self.get_movies_by_criteria(path=path)
+
+        return {"movies": data[(page-1)*per_page:page*per_page], "pagination": self.build_pagination_data(data, page, per_page)}
+
+    def get_tags(self):
+        data = []
+
+        document = self.fetch_document(self.URL + '/podborka.html')
+
+        items = document.xpath('//div[@class="podborki-item-block"]')
+
+        for item in items:
+            link = item.find('a')
+            img = item.find('a/span/img')
+            title = item.find('a/span[@class="podborki-title"]')
+
+            href = link.get('href')
+            thumb = img.get('src')
+            if thumb.find(self.URL) == -1:
+                thumb = self.URL + thumb
+
+            name = title.text_content()
+
+            data.append({'path': href, 'thumb': thumb, 'name': name})
+
+        return data
+
+    def build_pagination_data(self, data, page, per_page):
+        pages = len(data) / per_page
+
+        return{
+            'page': page,
+            'pages': pages,
+            'has_next': page < pages,
+            'has_previous': page > 1
+        }
+
     def get_series(self, path, page=1):
         return self.get_movies(path=path, page=page)
 
