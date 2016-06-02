@@ -93,7 +93,6 @@ class MyHitServiceTest(unittest.TestCase):
         self.assertEqual(pagination['has_previous'], True)
         self.assertEqual(pagination['page'], 2)
 
-
     def test_get_serie_info(self):
         series = self.service.get_all_series()['movies']
 

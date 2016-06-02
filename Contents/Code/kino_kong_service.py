@@ -58,7 +58,9 @@ class KinoKongService(HttpService):
 
             href = href_link.get('href')
             href = href[len(self.URL):]
-            thumb = self.URL + thumb_link.get('src')
+            thumb = thumb_link.get('src')
+            if thumb.find(self.URL) == -1:
+                thumb = self.URL + thumb
             name = title_node.text_content()
 
             data.append({'path': href, 'thumb': thumb, 'name': name})
