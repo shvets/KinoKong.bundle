@@ -285,6 +285,7 @@ class KinoKongService(HttpService):
         for item in items:
             shadow_node = item.find('div[@class="main-sliders-shadow"]')
             title_node = item.find('div[@class="main-sliders-title"]')
+            season_node = shadow_node.find('div/div[@class="main-sliders-season"]')
             bg_node = shadow_node.find('div/span[@class="main-sliders-bg"]')
 
             href_link = bg_node.find('a[@class="main-sliders-play"]')
@@ -300,7 +301,7 @@ class KinoKongService(HttpService):
 
             name = title_node.text_content()
 
-            data.append({'path': href, 'thumb': thumb, 'name': name})
+            data.append({'path': href, 'thumb': thumb, 'name': name, 'isSeason': season_node is not None})
 
         pagination = self.extract_pagination_data(path, page=page)
 
@@ -333,32 +334,29 @@ class KinoKongService(HttpService):
 
         return response
 
-    def get_serie_info(self, path):
-        playlist_url = self.get_serie_playlist_url(path)
+    def get_serie_info(self, playlist_url):
+        content = self.fetch_content(playlist_url)
 
-        if playlist_url:
-            content = self.fetch_content(playlist_url)
+        index = content.find('{"playlist":')
 
-            index = content.find('{"playlist":')
+        serie_info = self.to_json(content[index:])['playlist']
 
-            serie_info = self.to_json(content[index:])['playlist']
+        if serie_info and len(serie_info) > 0 and 'playlist' not in serie_info[0]:
+            serie_info = [{
+                "comment": "Сезон 1",
+                "playlist": serie_info
+            }]
 
-            if serie_info and len(serie_info) > 0 and 'playlist' not in serie_info[0]:
-                serie_info = [{
-                    "comment": "Сезон 1",
-                    "playlist": serie_info
-                }]
+        for item in serie_info:
+            for item2 in item['playlist']:
+                files = item2['file'].split(',')
+                item2['file'] = []
 
-            for item in serie_info:
-                for item2 in item['playlist']:
-                    files = item2['file'].split(',')
-                    item2['file'] = []
+                for file in files:
+                    if file:
+                        item2['file'].append(file)
 
-                    for file in files:
-                        if file:
-                            item2['file'].append(file)
-
-            return serie_info
+        return serie_info
 
     def get_episode_url(self, url, season, episode):
         if season:

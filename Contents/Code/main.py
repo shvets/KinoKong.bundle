@@ -76,9 +76,41 @@ def HandleMovie(operation=None, container=False, **params):
 
         oc.add(MetadataObjectForURL(media_info=media_info, url_items=url_items, handler=HandleMovie, player=PlayVideo))
 
+        playlist_url = service.get_serie_playlist_url(params['id'])
+
+        if playlist_url:
+            oc.add(DirectoryObject(
+                key=Callback(HandleTracks, name=params['name'], playlist_url=playlist_url),
+                title='Soundtracks'
+            ))
+
         if str(container) == 'False':
             history.push_to_history(Data, media_info)
             service.queue.append_bookmark_controls(oc, HandleMovie, media_info)
+
+    return oc
+
+@route(PREFIX + '/tracks')
+def HandleTracks(name, playlist_url):
+    oc = ObjectContainer(title2=unicode(L(name)))
+
+    serie_info = service.get_serie_info(playlist_url)[0]
+
+    oc.title2 = unicode(serie_info['comment'])
+
+    for item in serie_info['playlist']:
+        url = item['file'][0]
+        name = item['comment']
+        format = "mp3"
+
+        new_params = MediaInfo(
+            type='track',
+            id=url,
+            name=name,
+            format=format
+        )
+
+        oc.add(HandleTrack(**new_params))
 
     return oc
 
@@ -114,7 +146,8 @@ def HandleSerie(operation=None, **params):
 
     service.queue.handle_bookmark_operation(operation, media_info)
 
-    serie_info = service.get_serie_info(params['id'])
+    playlist_url = service.get_serie_playlist_url(params['id'])
+    serie_info = service.get_serie_info(playlist_url)
 
     for index, item in enumerate(serie_info):
         season = index+1
@@ -153,7 +186,8 @@ def HandleSeason(operation=None, container=False, **params):
     service.queue.handle_bookmark_operation(operation, media_info)
 
     if not params['episodes']:
-        serie_info = service.get_serie_info(params['id'])
+        playlist_url = service.get_serie_playlist_url(params['id'])
+        serie_info = service.get_serie_info(playlist_url)
         list = serie_info[int(params['season'])-1]['playlist']
     else:
         list = json.loads(params['episodes'])
@@ -318,21 +352,56 @@ def HandleGenres(name, genres):
 
     return oc
 
+@route(PREFIX + '/track')
+def HandleTrack(container=False, **params):
+    if 'm4a' in params['format']:
+        audio_container = Container.MP4
+        audio_codec = AudioCodec.AAC
+    else:
+        audio_container = Container.MP3
+        audio_codec = AudioCodec.MP3
+
+    url_items = [
+        {
+            "url": params['id'],
+            "config": {
+                "container": audio_container,
+                "audio_codec": audio_codec
+                # "bitrate": params['bitrate'],
+                # "duration": params['duration'],
+            }
+        }
+    ]
+
+    media_info = MediaInfo(**params)
+
+    track = AudioMetadataObjectForURL(media_info, url_items=url_items, player=PlayAudio)
+
+    if container:
+        oc = ObjectContainer(title2=unicode(params['name']))
+
+        oc.add(track)
+
+        return oc
+    else:
+        return track
+
 @route(PREFIX + '/search')
 def HandleSearch(query=None, page=1):
     oc = ObjectContainer(title2=unicode(L('Search')))
 
     response = service.search(query=query, page=page)
 
-    for movie in response['movies']:
-        name = movie['name']
-        thumb = movie['thumb']
+    for item in response['movies']:
+        name = item['name']
+        thumb = item['thumb']
 
         new_params = {
-            'id': movie['path'],
+            'id': item['path'],
             'title': name,
             'name': name,
-            'thumb': thumb
+            'thumb': thumb,
+            'isSeason': item['isSeason']
         }
         oc.add(DirectoryObject(
             key=Callback(HandleMovieOrSerie, **new_params),
@@ -346,9 +415,7 @@ def HandleSearch(query=None, page=1):
 
 @route(PREFIX + '/movie_or_serie')
 def HandleMovieOrSerie(**params):
-    serie_info = service.get_serie_info(params['id'])
-
-    if serie_info:
+    if 'isSeason' in params and params['isSeason'] is True:
         params['type'] = 'serie'
     else:
         params['type'] = 'movie'
@@ -408,8 +475,26 @@ def MetadataObjectForURL(media_info, url_items, handler, player):
 
     metadata_object.rating_key = unicode(media_info['name'])
     metadata_object.thumb = media_info['thumb']
+    metadata_object.title = media_info['name']
 
     metadata_object.items = MediaObjectsForURL(url_items, player=player)
+
+    return metadata_object
+
+def AudioMetadataObjectForURL(media_info, url_items, player):
+    metadata_object = builder.build_metadata_object(media_type=media_info['type'], title=media_info['name'])
+
+    metadata_object.key = Callback(HandleTrack, container=True, **media_info)
+    metadata_object.rating_key = unicode(media_info['name'])
+    # metadata_object.duration = int(media_info['duration']) * 1000
+
+    if 'thumb' in media_info:
+        metadata_object.artist = media_info['thumb']
+
+    if 'artist' in media_info:
+        metadata_object.artist = media_info['artist']
+
+    metadata_object.items.extend(MediaObjectsForURL(url_items, player))
 
     return metadata_object
 
@@ -445,3 +530,7 @@ def PlayList(url):
     play_list = service.get_play_list(url)
 
     return play_list
+
+@route(PREFIX + '/play_audio')
+def PlayAudio(url, play_list=None):
+    return Redirect(url)

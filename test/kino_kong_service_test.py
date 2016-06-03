@@ -99,7 +99,8 @@ class MyHitServiceTest(unittest.TestCase):
         #path = series[0]['path']
         path = "/28206-v-obezd-2015-07-06-2016.html"
 
-        result = self.service.get_serie_info(path)
+        playlist_url = self.get_serie_playlist_url(path)
+        result = self.service.get_serie_info(playlist_url)
 
         print(json.dumps(result, indent=4))
 
@@ -112,6 +113,15 @@ class MyHitServiceTest(unittest.TestCase):
         result = self.service.get_tags()
 
         print(json.dumps(result, indent=4))
+
+    def test_get_soundtracks(self):
+        path = '/15479-smotret-dedpul-2016-smotet-online.html'
+
+        playlist_url = self.service.get_serie_playlist_url(path)
+        result = self.service.get_serie_info(playlist_url)
+
+        print(json.dumps(result, indent=4))
+
 
 if __name__ == '__main__':
     unittest.main()
