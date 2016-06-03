@@ -47,7 +47,8 @@ def HandleMovies(title, id, page=1):
         new_params = {
             'id': item['path'],
             'name': item['name'],
-            'thumb': item['thumb']
+            'thumb': item['thumb'],
+            'isSerie': item['isSerie']
         }
         oc.add(DirectoryObject(
             key=Callback(HandleMovieOrSerie, **new_params),
@@ -401,7 +402,7 @@ def HandleSearch(query=None, page=1):
             'title': name,
             'name': name,
             'thumb': thumb,
-            'isSeason': item['isSeason']
+            'isSerie': item['isSerie']
         }
         oc.add(DirectoryObject(
             key=Callback(HandleMovieOrSerie, **new_params),
@@ -415,7 +416,7 @@ def HandleSearch(query=None, page=1):
 
 @route(PREFIX + '/movie_or_serie')
 def HandleMovieOrSerie(**params):
-    if 'isSeason' in params and params['isSeason'] is True:
+    if 'isSerie' in params and str(params['isSerie']) == 'True':
         params['type'] = 'serie'
     else:
         params['type'] = 'movie'

@@ -51,6 +51,7 @@ class KinoKongService(HttpService):
         for item in items:
             shadow_node = item.find('div[@class="main-sliders-shadow"]')
             title_node = item.find('div[@class="main-sliders-title"]')
+            season_node = shadow_node.find('div/div[@class="main-sliders-season"]')
             bg_node = shadow_node.find('div/span[@class="main-sliders-bg"]')
 
             href_link = bg_node.find('a[@class="main-sliders-play"]')
@@ -63,7 +64,7 @@ class KinoKongService(HttpService):
                 thumb = self.URL + thumb
             name = title_node.text_content()
 
-            data.append({'path': href, 'thumb': thumb, 'name': name})
+            data.append({'path': href, 'thumb': thumb, 'name': name, 'isSerie': season_node is not None})
 
         pagination = self.extract_pagination_data(page_path, page=page)
 
