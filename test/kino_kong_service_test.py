@@ -99,7 +99,7 @@ class MyHitServiceTest(unittest.TestCase):
         #path = series[0]['path']
         path = "/28206-v-obezd-2015-07-06-2016.html"
 
-        playlist_url = self.service.playlist_url(path)
+        playlist_url = self.service.get_serie_playlist_url(path)
         result = self.service.get_serie_info(playlist_url)
 
         print(json.dumps(result, indent=4))

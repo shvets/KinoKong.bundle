@@ -223,6 +223,27 @@ class KinoKongService(HttpService):
 
         return urls_items
 
+    def get_metadata(self, url):
+        data = {}
+
+        groups = url.split('.')
+        text = groups[len(groups) - 2]
+
+        result = re.search('(\d+)p_(\d+)', text)
+
+        if result and len(result.groups()) == 2:
+            data['width'] = result.group(1)
+            data['video_resolution'] = result.group(1)
+            data['height'] = result.group(2)
+        else:
+            result = re.search('_(\d+)', text)
+
+            if result and len(result.groups()) == 1:
+                data['width'] = result.group(1)
+                data['video_resolution'] = result.group(1)
+
+        return data
+
     def get_grouped_genres(self):
         data = {}
 
@@ -302,7 +323,7 @@ class KinoKongService(HttpService):
 
             name = title_node.text_content()
 
-            data.append({'path': href, 'thumb': thumb, 'name': name, 'isSeason': season_node is not None})
+            data.append({'path': href, 'thumb': thumb, 'name': name, 'isSerie': season_node is not None})
 
         pagination = self.extract_pagination_data(path, page=page)
 
