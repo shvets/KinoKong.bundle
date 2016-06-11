@@ -273,7 +273,7 @@ def HandleEpisode(operation=None, container=False, **params):
     else:
         urls = service.get_urls(path=media_info['id'])
 
-    if len(url_items.keys()) == 0:
+    if len(urls) == 0:
         return plex_util.no_contents()
     else:
         service.queue.handle_bookmark_operation(operation, media_info)
@@ -286,12 +286,11 @@ def HandleEpisode(operation=None, container=False, **params):
         metadata_object.thumb = media_info['thumb']
         metadata_object.title = media_info['name']
 
-        #metadata_object.items = common_routes.MediaObjectsForURL(url_items, player=common_routes.PlayVideo)
-
         for url in urls:
             metadata = service.get_metadata(url)
 
-            metadata["video_resolution"] = metadata['height']
+            if 'height' in metadata:
+                metadata["video_resolution"] = metadata['height']
 
             media_object = FlowBuilder.build_media_object(Callback(common_routes.PlayAudio, url=url), metadata)
 
