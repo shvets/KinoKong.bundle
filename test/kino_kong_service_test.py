@@ -94,7 +94,7 @@ class MyHitServiceTest(unittest.TestCase):
         self.assertEqual(pagination['page'], 2)
 
     def test_get_serie_info(self):
-        series = self.service.get_all_series()['movies']
+        series = self.service.get_all_series()['items']
 
         #path = series[0]['path']
         path = "/28206-v-obezd-2015-07-06-2016.html"

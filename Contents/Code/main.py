@@ -40,7 +40,7 @@ def HandleMovies(title, id, page=1):
 
     response = service.get_movies(path=id, page=page)
 
-    for item in response['movies']:
+    for item in response['items']:
         name = item['name']
         thumb = item['thumb']
 
@@ -150,7 +150,7 @@ def HandleSeries(id, title, page=1):
 
     response = service.get_series(path=id, page=page)
 
-    for item in response['movies']:
+    for item in response['items']:
         new_params = {
             'type': 'serie',
             'id': item['path'],
@@ -355,7 +355,7 @@ def HandleCriteria(id, name, page=1, per_page=25):
 
     response = service.get_movies_by_criteria_paginated(path=id, page=page, per_page=per_page)
 
-    for item in response['movies']:
+    for item in response['items']:
         name = item['name'] + " - " + item['rating']
 
         new_params = {
@@ -454,7 +454,7 @@ def HandleSearch(query=None, page=1):
 
     response = service.search(query=query, page=page)
 
-    for item in response['movies']:
+    for item in response['items']:
         name = item['name']
         thumb = item['thumb']
 

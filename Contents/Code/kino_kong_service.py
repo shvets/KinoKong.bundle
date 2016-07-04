@@ -9,7 +9,7 @@ class KinoKongService(HttpService):
     URL = 'http://kinokong.net'
 
     def available(self):
-        document = self.fetch_document(self.URL)
+        document = self.fetch_document(self.URL, headers=self.get_headers())
 
         return document.xpath('//div[@id="container"]')
 
@@ -44,7 +44,7 @@ class KinoKongService(HttpService):
 
         page_path = self.get_page_path(path, page)
 
-        document = self.fetch_document(self.URL + page_path)
+        document = self.fetch_document(self.URL + page_path, headers=self.get_headers())
 
         items = document.xpath('//div[@class="owl-item"]/div')
 
@@ -68,7 +68,7 @@ class KinoKongService(HttpService):
 
         pagination = self.extract_pagination_data(page_path, page=page)
 
-        return {"movies": data, "pagination": pagination["pagination"]}
+        return {"items": data, "pagination": pagination["pagination"]}
 
     def get_movies_by_rating(self, page=1):
         return self.get_movies_by_criteria_paginated( "/?do=top&mode=rating", page=page)
@@ -82,7 +82,7 @@ class KinoKongService(HttpService):
     def get_movies_by_criteria(self, path):
         data = []
 
-        document = self.fetch_document(self.URL + path)
+        document = self.fetch_document(self.URL + path, headers=self.get_headers())
 
         items = document.xpath('//div[@id="dle-content"]/div/div/table/tr')
 
@@ -105,12 +105,12 @@ class KinoKongService(HttpService):
     def get_movies_by_criteria_paginated(self, path, page=1, per_page=25):
         data = self.get_movies_by_criteria(path=path)
 
-        return {"movies": data[(page-1)*per_page:page*per_page], "pagination": self.build_pagination_data(data, page, per_page)}
+        return {"items": data[(page-1)*per_page:page*per_page], "pagination": self.build_pagination_data(data, page, per_page)}
 
     def get_tags(self):
         data = []
 
-        document = self.fetch_document(self.URL + '/podborka.html')
+        document = self.fetch_document(self.URL + '/podborka.html', headers=self.get_headers())
 
         items = document.xpath('//div[@class="podborki-item-block"]')
 
@@ -146,7 +146,7 @@ class KinoKongService(HttpService):
     def get_urls(self, path):
         urls = None
 
-        document = self.fetch_document(self.URL + path)
+        document = self.fetch_document(self.URL + path, headers=self.get_headers())
 
         items = document.xpath('//script')
 
@@ -166,7 +166,7 @@ class KinoKongService(HttpService):
     def get_serie_playlist_url(self, path):
         url = None
 
-        document = self.fetch_document(self.URL + path)
+        document = self.fetch_document(self.URL + path, headers=self.get_headers())
 
         items = document.xpath('//script')
 
@@ -247,7 +247,7 @@ class KinoKongService(HttpService):
     def get_grouped_genres(self):
         data = {}
 
-        document = self.fetch_document(self.URL)
+        document = self.fetch_document(self.URL, headers=self.get_headers())
 
         items = document.xpath('//div[@id="header"]/div/div/div/ul/li')
 
@@ -295,7 +295,7 @@ class KinoKongService(HttpService):
 
         path = "/index.php?do=search"
 
-        response = self.http_request(self.URL + path, method="POST", data=search_data)
+        response = self.http_request(self.URL + path, method="POST", data=search_data, headers=self.get_headers())
         content = response.read()
 
         document = self.to_document(content)
@@ -327,12 +327,12 @@ class KinoKongService(HttpService):
 
         pagination = self.extract_pagination_data(path, page=page)
 
-        return {"movies": data, "pagination": pagination["pagination"]}
+        return {"items": data, "pagination": pagination["pagination"]}
 
     def extract_pagination_data(self, path, page):
         page = int(page)
 
-        document = self.fetch_document(self.URL + path)
+        document = self.fetch_document(self.URL + path, headers=self.get_headers())
 
         pages = 1
 
@@ -357,7 +357,7 @@ class KinoKongService(HttpService):
         return response
 
     def get_serie_info(self, playlist_url):
-        content = self.fetch_content(playlist_url)
+        content = self.fetch_content(playlist_url, headers=self.get_headers())
 
         index = content.find('{"playlist":')
 
@@ -385,3 +385,9 @@ class KinoKongService(HttpService):
             return '%s?season=%d&episode=%d' % (url, int(season), int(episode))
 
         return url
+
+    @staticmethod
+    def get_headers():
+        return {
+            'User-Agent': 'Plex-User-Agent',
+        }
