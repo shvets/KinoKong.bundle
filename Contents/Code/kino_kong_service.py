@@ -144,7 +144,7 @@ class KinoKongService(HttpService):
         return self.get_movies(path=path, page=page)
 
     def get_urls(self, path):
-        urls = None
+        urls = {}
 
         document = self.fetch_document(self.URL + path, headers=self.get_headers())
 
@@ -332,7 +332,7 @@ class KinoKongService(HttpService):
     def extract_pagination_data(self, path, page):
         page = int(page)
 
-        document = self.fetch_document(self.URL + path, headers=self.get_headers())
+        document = self.fetch_document(self.URL + self.get_page_path(path), headers=self.get_headers())
 
         pages = 1
 
