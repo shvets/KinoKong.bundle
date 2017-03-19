@@ -6,7 +6,7 @@ import re
 from http_service import HttpService
 
 class KinoKongService(HttpService):
-    URL = 'http://kinokong.net'
+    URL = 'http://kinokong.cc'
 
     def available(self):
         document = self.fetch_document(self.URL, headers=self.get_headers())
